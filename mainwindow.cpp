@@ -19,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    ipc_device->Logout(device_id);
+
     delete ui;
     delete ipc_device;
 }

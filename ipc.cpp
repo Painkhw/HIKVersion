@@ -8,6 +8,11 @@ IPC::IPC()
     NET_DVR_Init();
 }
 
+IPC::~IPC()
+{
+    NET_DVR_Cleanup();
+}
+
 //QString UserName, QString Password, QString IPAddress, int Port
 
 int IPC::LoginToDevice(QString UserName, QString Password, QString IPAddress, int Port)
@@ -40,4 +45,9 @@ int IPC::GetLastError(void)
     int error_code;
     printf("error: %s", NET_DVR_GetErrorMsg(&error_code));
     return error_code;
+}
+
+void IPC::Logout(int device_id)
+{
+    NET_DVR_Logout_V30(device_id);
 }
