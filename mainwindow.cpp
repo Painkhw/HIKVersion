@@ -53,7 +53,7 @@ void MainWindow::on_PlayButton_clicked()
 
     if(device_id != -1)
     {
-        result = ipc_device->StartRealPlay(device_id, ui->frame->winId());
+        result = ipc_device->StartRealPlay(device_id, /*ui->frame->winId()*/NULL);
 
         if(result == -1)
         {

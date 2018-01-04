@@ -73,3 +73,21 @@ unix:!macx: LIBS += -L$$PWD/lib/ -lHCCore
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
+
+unix: CONFIG += link_pkgconfig
+unix: PKGCONFIG += opencv
+
+unix:!macx: LIBS += -L$$PWD/lib/ -lPlayCtrl
+
+INCLUDEPATH += $$PWD/includeCn
+DEPENDPATH += $$PWD/includeCn
+
+unix:!macx: LIBS += -L$$PWD/lib/ -lAudioRender
+
+INCLUDEPATH += $$PWD/includeCn
+DEPENDPATH += $$PWD/includeCn
+
+unix:!macx: LIBS += -L$$PWD/lib/ -lSuperRender
+
+INCLUDEPATH += $$PWD/includeCn
+DEPENDPATH += $$PWD/includeCn

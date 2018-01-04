@@ -1,7 +1,14 @@
 #include "ipc.h"
+
 #include "HCNetSDK.h"
+#include "PlayM4.h"
 
 #include <string.h>
+
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+
+LONG port;
 
 IPC::IPC()
 {
@@ -13,6 +20,68 @@ IPC::~IPC()
     NET_DVR_Cleanup();
 }
 
+void __stdcall PlayM4DecodeCallBack(LONG nPort, char* pBuffer, LONG nSize, FRAME_INFO* frameInfo, void* userData, LONG res)
+{
+    if(frameInfo->nType == T_YV12)
+    {
+       cv::Mat pImg(frameInfo->nHeight, frameInfo->nWidth, CV_8UC1, pBuffer);
+       cv::imshow("IPC", pImg);
+       cv::waitKey(1);
+    }
+}
+
+void __stdcall  RealDataCallBack(LONG lRealHandle,DWORD dwDataType,BYTE *pBuffer,DWORD  dwBufSize, void* dwUser)
+{
+    (void)dwUser;
+    (void)lRealHandle;
+
+    switch (dwDataType)
+    {
+        case NET_DVR_SYSHEAD:
+            if(!PlayM4_GetPort(&port))
+            {
+                break;
+            }
+
+            if(dwBufSize > 0)
+            {
+                if(!PlayM4_SetStreamOpenMode(port, STREAME_REALTIME))
+                {
+                    break;
+                }
+
+                if(!PlayM4_OpenStream(port, pBuffer, dwBufSize, 1024*1024))
+                {
+                    break;
+                }
+
+                if(!PlayM4_Play(port, NULL))
+                {
+                   break;
+                }
+
+                if(!PlayM4_SetDecCallBack(port, PlayM4DecodeCallBack))
+                {
+                   break;
+                }
+            }
+
+            break;
+
+        case NET_DVR_STREAMDATA:
+            if((dwBufSize > 0) && port != -1)
+            {
+                if(!PlayM4_InputData(port, pBuffer, dwBufSize))
+                {
+                    break;
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+}
 //QString UserName, QString Password, QString IPAddress, int Port
 
 int IPC::LoginToDevice(QString UserName, QString Password, QString IPAddress, int Port)
@@ -37,7 +106,7 @@ int IPC::StartRealPlay(int dev_id, WId win_id)
    client_info.lLinkMode = 0;
    client_info.hPlayWnd = win_id;
 
-   return NET_DVR_RealPlay_V30(dev_id, &client_info, NULL, NULL, 1);
+   return NET_DVR_RealPlay_V30(dev_id, &client_info, RealDataCallBack, NULL, 1);
 }
 
 int IPC::GetLastError(void)

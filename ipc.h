@@ -16,7 +16,6 @@ public:
     void Logout(int device_id);
 
 private:
-
 };
 
 #endif // IPC_H
