@@ -7,13 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>579</width>
-    <height>409</height>
+    <height>391</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>IPC</string>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="maximumSize">
     <size>
      <width>843</width>
@@ -23,6 +29,12 @@
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QFrame" name="frame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -48,6 +60,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="PlayButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Play</string>
         </property>
@@ -55,6 +73,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="AddDeviceButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Add Device</string>
         </property>
