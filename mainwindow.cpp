@@ -4,7 +4,8 @@
 #include "logindialog.h"
 
 #include <QStatusBar>
-#include <QFrame>
+#include <QImage>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -13,8 +14,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     ipc_device = new IPC();
-
     device_id = -1;
+
+    connect(ipc_device, SIGNAL(imageReady(QImage)), this, SLOT(processImage(QImage)));
 }
 
 MainWindow::~MainWindow()
@@ -42,29 +44,19 @@ void MainWindow::LoginClicked(QString UserName, QString Password, QString IPAddr
         ui->statusBar->showMessage(tr("Login Success!"));
         device_id = result;
     }
+}
 
-    ui->frame->winId();
+void MainWindow::processImage(QImage img)
+{
+    ui->label->setPixmap(QPixmap::fromImage(img));
+    ui->label->resize(ui->label->pixmap()->size());
 }
 
 void MainWindow::on_PlayButton_clicked()
 {
-
-    int result, error_code;
-
     if(device_id != -1)
     {
-        result = ipc_device->StartRealPlay(device_id, /*ui->frame->winId()*/NULL);
-
-        if(result == -1)
-        {
-            error_code = ipc_device->GetLastError();
-            ui->statusBar->showMessage(tr("Start RealPlay Failure! Error Code %1").arg(error_code));
-        }
-        else
-        {
-            ui->statusBar->showMessage(tr("RealPlay Success!"));
-            device_id = result;
-        }
+        ipc_device->start();
     }
 }
 

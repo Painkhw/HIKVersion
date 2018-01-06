@@ -1,18 +1,19 @@
 #include "ipc.h"
 
-#include "HCNetSDK.h"
-#include "PlayM4.h"
-
 #include <string.h>
 
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
+#include <QSemaphore>
+#include <QImage>
 
 LONG port;
+QSemaphore imgReady;
+cv::Mat img;
 
-IPC::IPC()
+IPC::IPC(QObject* parent) : QThread(parent)
 {
     NET_DVR_Init();
+    device_id = -1;
+    isStartRealPlay = false;
 }
 
 IPC::~IPC()
@@ -20,17 +21,20 @@ IPC::~IPC()
     NET_DVR_Cleanup();
 }
 
-void __stdcall PlayM4DecodeCallBack(LONG nPort, char* pBuffer, LONG nSize, FRAME_INFO* frameInfo, void* userData, LONG res)
+void IPC::PlayM4DecodeCallBack(LONG nPort, char* pBuffer, LONG nSize, FRAME_INFO* frameInfo, void* userData, LONG res)
 {
     if(frameInfo->nType == T_YV12)
     {
-       cv::Mat pImg(frameInfo->nHeight, frameInfo->nWidth, CV_8UC1, pBuffer);
-       cv::imshow("IPC", pImg);
-       cv::waitKey(1);
+       img = cv::Mat(frameInfo->nHeight, frameInfo->nWidth, CV_8UC3);
+       cv::Mat src(frameInfo->nHeight+frameInfo->nHeight/2, frameInfo->nWidth, CV_8UC1, pBuffer);
+       cv::cvtColor(src, img, CV_YUV2RGB_YV12);
+       cv::resize(img, img, cv::Size(1024,576), 0, 0);
+
+       imgReady.release();
     }
 }
 
-void __stdcall  RealDataCallBack(LONG lRealHandle,DWORD dwDataType,BYTE *pBuffer,DWORD  dwBufSize, void* dwUser)
+void IPC::RealDataCallBack(LONG lRealHandle,DWORD dwDataType,BYTE *pBuffer,DWORD  dwBufSize, void* dwUser)
 {
     (void)dwUser;
     (void)lRealHandle;
@@ -60,7 +64,7 @@ void __stdcall  RealDataCallBack(LONG lRealHandle,DWORD dwDataType,BYTE *pBuffer
                    break;
                 }
 
-                if(!PlayM4_SetDecCallBack(port, PlayM4DecodeCallBack))
+                if(!PlayM4_SetDecCallBack(port, &PlayM4DecodeCallBack))
                 {
                    break;
                 }
@@ -83,6 +87,33 @@ void __stdcall  RealDataCallBack(LONG lRealHandle,DWORD dwDataType,BYTE *pBuffer
     }
 }
 //QString UserName, QString Password, QString IPAddress, int Port
+void IPC::run()
+{
+    while(1)
+    {
+        if(device_id != -1)
+        {
+            if(!isStartRealPlay)
+            {
+                NET_DVR_CLIENTINFO client_info;
+
+                client_info.lChannel =  1;
+                client_info.lLinkMode = 0;
+                client_info.hPlayWnd = NULL;
+
+                realplay_id = NET_DVR_RealPlay_V30(device_id, &client_info, &RealDataCallBack, NULL, 1);
+
+                isStartRealPlay = true;
+            }
+
+            imgReady.acquire();
+            image = QImage((const unsigned char*)(img.data),
+                          img.cols, img.rows, QImage::Format_RGB888);
+
+            emit imageReady(image);
+        }
+    }
+}
 
 int IPC::LoginToDevice(QString UserName, QString Password, QString IPAddress, int Port)
 {
@@ -94,7 +125,8 @@ int IPC::LoginToDevice(QString UserName, QString Password, QString IPAddress, in
     strcpy(user_info.sUserName, UserName.toLocal8Bit().data());
     strcpy(user_info.sPassword, Password.toLocal8Bit().data());
 
-    return NET_DVR_Login_V40(&user_info, &device_info);
+    device_id = NET_DVR_Login_V40(&user_info, &device_info);
+    return device_id;
 }
 
 
@@ -106,7 +138,7 @@ int IPC::StartRealPlay(int dev_id, WId win_id)
    client_info.lLinkMode = 0;
    client_info.hPlayWnd = win_id;
 
-   return NET_DVR_RealPlay_V30(dev_id, &client_info, RealDataCallBack, NULL, 1);
+   return NET_DVR_RealPlay_V30(dev_id, &client_info, &RealDataCallBack, NULL, 1);
 }
 
 int IPC::GetLastError(void)
