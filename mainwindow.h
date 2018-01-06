@@ -25,6 +25,8 @@ private slots:
 
     void on_AddDeviceButton_clicked();
 
+    void processImage(QImage img);
+
 
 private:
     Ui::MainWindow *ui;
