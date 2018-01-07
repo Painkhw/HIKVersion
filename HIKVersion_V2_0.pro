@@ -26,14 +26,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp \
         mainwindow.cpp \
     ipc.cpp \
-    logindialog.cpp
+    logindialog.cpp \
+    featuretracker.cpp
 HEADERS += \
     includeCn/HCNetSDK.h \
     includeCn/LinuxPlayM4.h \
     includeCn/PlayM4.h \
     ipc.h \
     logindialog.h \
-    mainwindow.h
+    mainwindow.h \
+    featuretracker.h
 
 FORMS += \
     logindialog.ui \

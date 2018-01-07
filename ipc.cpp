@@ -4,16 +4,20 @@
 
 #include <QSemaphore>
 #include <QImage>
+#include <featuretracker.h>
 
 LONG port;
 QSemaphore imgReady;
 cv::Mat img;
+cv::Mat out;
 
 IPC::IPC(QObject* parent) : QThread(parent)
 {
     NET_DVR_Init();
     device_id = -1;
     isStartRealPlay = false;
+
+    tracker = FeatureTracker();
 }
 
 IPC::~IPC()
@@ -26,9 +30,9 @@ void IPC::PlayM4DecodeCallBack(LONG nPort, char* pBuffer, LONG nSize, FRAME_INFO
     if(frameInfo->nType == T_YV12)
     {
        img = cv::Mat(frameInfo->nHeight, frameInfo->nWidth, CV_8UC3);
+       out = cv::Mat(frameInfo->nHeight, frameInfo->nWidth, CV_8UC3);
        cv::Mat src(frameInfo->nHeight+frameInfo->nHeight/2, frameInfo->nWidth, CV_8UC1, pBuffer);
-       cv::cvtColor(src, img, CV_YUV2RGB_YV12);
-       cv::resize(img, img, cv::Size(1024,576), 0, 0);
+       cv::cvtColor(src, img, CV_YUV2BGR_YV12);
 
        imgReady.release();
     }
@@ -107,8 +111,12 @@ void IPC::run()
             }
 
             imgReady.acquire();
-            image = QImage((const unsigned char*)(img.data),
-                          img.cols, img.rows, QImage::Format_RGB888);
+            tracker.process(img, out);
+            cv::resize(out, out, cv::Size(1024,576), 0, 0);
+            cv::cvtColor(out, out, CV_BGR2RGB);
+
+            image = QImage((const unsigned char*)(out.data),
+                          out.cols, out.rows, QImage::Format_RGB888);
 
             emit imageReady(image);
         }

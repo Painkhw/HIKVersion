@@ -12,6 +12,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "featuretracker.h"
+
 class IPC : public QThread
 {
     Q_OBJECT
@@ -35,6 +37,8 @@ private:
     LONG device_id;
     LONG realplay_id;
     QImage image;
+
+    FeatureTracker tracker;
 
 signals:
     void imageReady(QImage image);
